@@ -5,9 +5,11 @@ from .setence import SentenceSplitter
 from .character import CharacterSplitter
 from .recursive import RecursiveSplitter
 from .markdown import MarkdownSplitter, _MD_Split
+from .code import CodeSplitter
 
 __all__ = [
     '_TextSplitterBase', '_Split', 'MetadataMode', 'make_transform', 'TransformArgs', 'NodeTransform',
     'AdaptiveTransform', 'FuncNodeTransform', 'LLMParser', 'SentenceSplitter', 'CharacterSplitter',
     'RecursiveSplitter', '_TokenTextSplitter', 'build_nodes_from_splits', 'MarkdownSplitter', '_MD_Split',
+    'CodeSplitter',
 ]
