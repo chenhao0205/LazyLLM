@@ -1,9 +1,10 @@
 import lazyllm
 from lazyllm.tools.rag.transform import (
     SentenceSplitter, CharacterSplitter, RecursiveSplitter,
-    _TextSplitterBase, _Split, _TokenTextSplitter,
-    MarkdownSplitter, _MD_Split, CodeSplitter
+    MarkdownSplitter, CodeSplitter
 )
+from lazyllm.tools.rag.transform.markdown import _MdSplit
+from lazyllm.tools.rag.transform.base import _TextSplitterBase, _Split, _TokenTextSplitter
 from lazyllm.tools.rag.doc_node import DocNode
 import pytest
 from unittest.mock import MagicMock
@@ -17,7 +18,7 @@ def doc_node():
     node.get_metadata_str.return_value = ''
     return node
 
-@pytest.mark.skip("skip for now")
+
 class TestSentenceSplitter:
     def setup_method(self):
         '''Setup for tests: initialize the SentenceSplitter.'''
@@ -60,7 +61,7 @@ class TestSentenceSplitter:
         splits = splitter.split_text(text, metadata_size=0)
         assert splits == ['This is a test sentence.', 'It needs to be split into multiple chunks.']
 
-@pytest.mark.skip("skip for now")
+
 class TestCharacterSplitter:
     def setup_method(self):
         '''Setup for tests: initialize the CharacterSplitter.'''
@@ -133,7 +134,7 @@ class TestCharacterSplitter:
         print(splits)
         assert splits == ['Hello, world', ' This is a test', '.']
 
-@pytest.mark.skip("skip for now")
+
 class TestRecursiveSplitter:
     def setup_method(self):
         '''Setup for tests: initialize the RecursiveSplitter.'''
@@ -202,10 +203,10 @@ class TestMarkdownSplitter:
         text = "\n\n# 标题1\n内容A\n\n## 标题2\n内容B\n\n### 标题3\n内容C\n\n# 标题4\n内容D\n内容E"
         splits = self.splitter.split_markdown_by_semantics(text)
         assert splits == [
-            _MD_Split(path=['标题1'], level=1, header='标题1', content='内容A', token_size=5, type='content'),
-            _MD_Split(path=['标题1', '标题2'], level=2, header='标题2', content='内容B', token_size=5, type='content'),
-            _MD_Split(path=['标题1', '标题2', '标题3'], level=3, header='标题3', content='内容C', token_size=5, type='content'),
-            _MD_Split(path=['标题4'], level=1, header='标题4', content='内容D\n内容E', token_size=11, type='content')
+            _MdSplit(path=['标题1'], level=1, header='标题1', content='内容A', token_size=5, type='content'),
+            _MdSplit(path=['标题1', '标题2'], level=2, header='标题2', content='内容B', token_size=5, type='content'),
+            _MdSplit(path=['标题1', '标题2', '标题3'], level=3, header='标题3', content='内容C', token_size=5, type='content'),
+            _MdSplit(path=['标题4'], level=1, header='标题4', content='内容D\n内容E', token_size=11, type='content')
         ]
 
     def test_split(self):
@@ -213,89 +214,89 @@ class TestMarkdownSplitter:
         markdown = MarkdownSplitter(keep_headers=True, keep_trace=True)
         splits = markdown._split(text, 1024)
         assert splits == [
-            _MD_Split(path=['标题1'], level=1, header='标题1', content='内容A', token_size=5, type='content'),
-            _MD_Split(path=['标题1', '标题2'], level=2, header='标题2', content='内容B', token_size=5, type='content'),
-            _MD_Split(path=['标题1', '标题2', '标题3'], level=3, header='标题3', content='内容C', token_size=5, type='content'),
-            _MD_Split(path=['标题4'], level=1, header='标题4', content='内容D\n内容E', token_size=11, type='content')
+            _MdSplit(path=['标题1'], level=1, header='标题1', content='内容A', token_size=5, type='content'),
+            _MdSplit(path=['标题1', '标题2'], level=2, header='标题2', content='内容B', token_size=5, type='content'),
+            _MdSplit(path=['标题1', '标题2', '标题3'], level=3, header='标题3', content='内容C', token_size=5, type='content'),
+            _MdSplit(path=['标题4'], level=1, header='标题4', content='内容D\n内容E', token_size=11, type='content')
         ]
 
         makrkdown = MarkdownSplitter(keep_headers=True, keep_trace=False)
         splits = makrkdown._split(text, 1024)
         assert splits == [
-            _MD_Split(path=['标题1'], level=1, header='标题1', content='内容A', token_size=5, type='content'),
-            _MD_Split(path=['标题1', '标题2'], level=2, header='标题2', content='内容B', token_size=5, type='content'),
-            _MD_Split(path=['标题1', '标题2', '标题3'], level=3, header='标题3', content='内容C', token_size=5, type='content'),
-            _MD_Split(path=['标题4'], level=1, header='标题4', content='内容D\n内容E', token_size=11, type='content')
+            _MdSplit(path=['标题1'], level=1, header='标题1', content='内容A', token_size=5, type='content'),
+            _MdSplit(path=['标题1', '标题2'], level=2, header='标题2', content='内容B', token_size=5, type='content'),
+            _MdSplit(path=['标题1', '标题2', '标题3'], level=3, header='标题3', content='内容C', token_size=5, type='content'),
+            _MdSplit(path=['标题4'], level=1, header='标题4', content='内容D\n内容E', token_size=11, type='content')
         ]
 
         markdown = MarkdownSplitter(keep_headers=False, keep_trace=False)
         splits = markdown._split(text, 1024)
         assert splits == [
-            _MD_Split(path=['标题1'], level=1, header='标题1', content='内容A', token_size=5, type='content'),
-            _MD_Split(path=['标题1', '标题2'], level=2, header='标题2', content='内容B', token_size=5, type='content'),
-            _MD_Split(path=['标题1', '标题2', '标题3'], level=3, header='标题3', content='内容C', token_size=5, type='content'),
-            _MD_Split(path=['标题4'], level=1, header='标题4', content='内容D\n内容E', token_size=11, type='content')
+            _MdSplit(path=['标题1'], level=1, header='标题1', content='内容A', token_size=5, type='content'),
+            _MdSplit(path=['标题1', '标题2'], level=2, header='标题2', content='内容B', token_size=5, type='content'),
+            _MdSplit(path=['标题1', '标题2', '标题3'], level=3, header='标题3', content='内容C', token_size=5, type='content'),
+            _MdSplit(path=['标题4'], level=1, header='标题4', content='内容D\n内容E', token_size=11, type='content')
         ]
 
     def test_merge(self):
-        md_text = "\n\n# LinuxBoot on Ampere Mt. Jade Platform" \
-                  "\nThe Ampere Altra Family processor based Mt. Jade platform is a high-performance ARM server platform, offering up to 256 processor cores in a " \
-                  "dual socket configuration. The Tianocore EDK2 firmware for the Mt. Jade platform has been fully upstreamed to the tianocore/edk2-platforms repository, "\
-                  "enabling the community to build and experiment with the platform's firmware using entirely open-source code. It also supports LinuxBoot, an open-source " \
-                  "firmware framework that reduces boot time, enhances security, and increases flexibility compared to standard UEFI firmware."\
-                  "\n\nMt. Jade has also achieved a significant milestone by becoming [the first server certified under the Arm SystemReady LS certification program](https://community.arm.com/arm-community-blogs" \
-                  "/b/architectures-and-processors-blog/posts/arm-systemready-ls). SystemReady LS ensures compliance with standardized boot and runtime environments for Linux-based " \
-                  "systems, enabling seamless deployment across diverse hardware. This certification further emphasizes Mt. Jade's readiness for enterprise and cloud-scale adoption "\
-                  "by providing assurance of compatibility, performance, and reliability." \
-                  "\n\nThis case study explores the LinuxBoot implementation on the Ampere Mt. Jade platform, inspired by the approach used in [Google's LinuxBoot deployment](Google_study.md)." \
-                  "\n\n## Ampere EDK2-LinuxBoot Components" \
-                  "\nThe Mt. Jade platform embraces a hybrid firmware architecture, combining UEFI/EDK2 for hardware initialization and LinuxBoot for advanced boot functionalities. The platform aligns closely with step 6 in the LinuxBoot adoption model." \
+        md_text = '\n\n# LinuxBoot on Ampere Mt. Jade Platform' \
+                  '\nThe Ampere Altra Family processor based Mt. Jade platform is a high-performance ARM server platform, offering up to 256 processor cores in a ' \
+                  'dual socket configuration. The Tianocore EDK2 firmware for the Mt. Jade platform has been fully upstreamed to the tianocore/edk2-platforms repository, '\
+                  'enabling the community to build and experiment with the platform\'s firmware using entirely open-source code. It also supports LinuxBoot, an open-source ' \
+                  'firmware framework that reduces boot time, enhances security, and increases flexibility compared to standard UEFI firmware.'\
+                  '\n\nMt. Jade has also achieved a significant milestone by becoming [the first server certified under the Arm SystemReady LS certification program](https://community.arm.com/arm-community-blogs' \
+                  '/b/architectures-and-processors-blog/posts/arm-systemready-ls). SystemReady LS ensures compliance with standardized boot and runtime environments for Linux-based ' \
+                  'systems, enabling seamless deployment across diverse hardware. This certification further emphasizes Mt. Jade\'s readiness for enterprise and cloud-scale adoption '\
+                  'by providing assurance of compatibility, performance, and reliability.' \
+                  '\n\nThis case study explores the LinuxBoot implementation on the Ampere Mt. Jade platform, inspired by the approach used in [Google\'s LinuxBoot deployment](Google_study.md).' \
+                  '\n\n## Ampere EDK2-LinuxBoot Components' \
+                  '\nThe Mt. Jade platform embraces a hybrid firmware architecture, combining UEFI/EDK2 for hardware initialization and LinuxBoot for advanced boot functionalities. The platform aligns closely with step 6 in the LinuxBoot adoption model.' \
                   '\n\n<img src=\"../images/Case-study-Ampere.svg\">' \
-                  "\n\nThe entire boot firmware stack for the Mt. Jade is open source and available in the Github." \
-                  "\n\n* **EDK2**: The PEI and minimal (stripped-down) DXE drivers, including both common and platform code, are fully open source and resides in Tianocore edk2-platforms and edk2 repositories."\
-                  "\n* **LinuxBoot**: The LinuxBoot binary ([flashkernel](../glossary.md)) for Mt. Jade is supported in the [linuxboot/linuxboot](https://github.com/linuxboot/linuxboot/tree/main/mainboards/ampere/jade) repository." \
-                  "\n\n## Ampere Solution for LinuxBoot as a Boot Device Selection"\
-                  "\nAmpere has implemented and successfully upstreamed a solution for integrating LinuxBoot as a Boot Device Selection (BDS) option into the TianoCore EDK2 framework, as seen in commit [ArmPkg: Implement PlatformBootManagerLib for LinuxBoot](https://github.com/tianocore/edk2/commit/62540372230ecb5318a9c8a40580a14beeb9ded0). This innovation simplifies the boot process for the Mt. Jade platform and aligns with LinuxBoot's goals of efficiency and flexibility."\
-                  "\n\nUnlike the earlier practice that replaced the UEFI Shell with a LinuxBoot flashkernel, Ampere's solution introduces a custom BDS implementation that directly boots into the LinuxBoot environment as the active boot option. This approach bypasses the need to load the UEFI Shell or UiApp (UEFI Setup Menu), which depend on numerous unnecessary DXE drivers."\
-                  "\n\nTo further enhance flexibility, Ampere introduced a new GUID specifically for the LinuxBoot binary, ensuring clear separation from the UEFI Shell GUID. This distinction allows precise identification of LinuxBoot components in the firmware."\
-                  "\n\n## Build Process"\
-                  "\nBuilding a flashable EDK2 firmware image with an integrated LinuxBoot flashkernel for the Ampere Mt. Jade platform involves two main steps: building the LinuxBoot flashkernel and integrating it into the EDK2 firmware build."\
-                  "\n\n### Step 1: Build the LinuxBoot Flashkernel"\
-                  "\nThe LinuxBoot flash kernel is built as follows:"\
-                  "\n\n```bash\ngit clone https://github.com/linuxboot/linuxboot.git"\
-                  "\ncd linuxboot/mainboards/ampere/jade && make fetch flashkernel"\
-                  "\n```" \
-                  "\n\nAfter the build process completes, the flash kernel will be located at: linuxboot/mainboards/ampere/jade/flashkernel"\
-                  "\n\n### Step 2: Build the EDK2 Firmware Image with the Flash Kernel"\
-                  "\nThe EDK2 firmware image is built with the LinuxBoot flashkernel integrated into the flash image using the following steps:"\
-                  "\n\n```bash"\
-                  "\ngit clone https://github.com/tianocore/edk2-platforms.git"\
-                  "\ngit clone https://github.com/tianocore/edk2.git"\
-                  "\ngit clone https://github.com/tianocore/edk2-non-osi.git"\
-                  "\n./edk2-platforms/Platform/Ampere/buildfw.sh -b RELEASE -t GCC -p Jade -l linuxboot/mainboards/ampere/jade/flashkernel"\
-                  "\n```"\
-                  "\n\nThe `buildfw.sh` script automatically integrates the LinuxBoot flash kernel (provided via the -l option) as part of the final EDK2 firmware image."\
-                  "\n\nThis process generates a flashable EDK2 firmware image with embedded LinuxBoot, ready for deployment on the Ampere Mt. Jade platform."\
-                  "\n\n## Booting with LinuxBoot\nWhen powered on, the system will boot into the u-root and automatically kexec to the target OS."\
-                  "\n\n```text"\
-                  "\nRun /init as init process"\
-                  "\n1970/01/01 00:00:10 Welcome to u-root!"\
-                  "\n..."\
-                  "\n```"\
-                  "\n\n## Future Work"\
-                  "\nWhile the LinuxBoot implementation on the Ampere Mt. Jade platform represents a significant milestone, several advanced features and improvements remain to be explored. These enhancements would extend the platform's capabilities, improve its usability, and reinforce its position as a leading open source firmware solution. Key areas for future development include:"\
-                  "\n\n### Secure Boot with LinuxBoot"\
-                  "\nOne of the critical areas for future development is enabling secure boot verification for the target operating system. In the LinuxBoot environment, the target OS is typically booted using kexec. However, it is unclear how Secure Boot operates in this context, as kexec bypasses traditional firmware-controlled secure boot mechanisms. Future work should investigate how to extend Secure Boot principles to kexec, ensuring that the OS kernel and its components are verified and authenticated before execution. This may involve implementing signature checks and utilizing trusted certificate chains directly within the LinuxBoot environment to mimic the functionality of UEFI Secure Boot during the kexec process."\
-                  "\n\n### TPM Support"\
-                  "\nThe platform supports TPM, but its integration with LinuxBoot is yet to be defined. Future work could explore utilizing the TPM for secure boot measurements, and system integrity attestation."\
-                  "\n\n### Expanding Support for Additional Ampere Platforms"\
-                  "\nBuilding on the success of LinuxBoot on Mt. Jade, future efforts should expand support to other Ampere platforms. This would ensure broader adoption and usability across different hardware configurations."\
-                  "\n\n### Optimizing the Transition Between UEFI and LinuxBoot"\
-                  "\nImproving the efficiency of the handoff between UEFI and LinuxBoot could further reduce boot times. This optimization would involve refining the initialization process and minimizing redundant operations during the handoff."\
-                  "\n\n### Advanced Diagnostics and Monitoring Tools"\
-                  "\nAdding more diagnostic and monitoring tools to the LinuxBoot u-root environment would enhance debugging and system management. These tools could provide deeper insights into system performance and potential issues, improving reliability and maintainability."\
-                  "\n\n## See Also"\
-                  "\n* [LinuxBoot on Ampere Platforms: A new (old) approach to firmware](https://amperecomputing.com/blogs/linuxboot-on-ampere-platforms--a-new-old-approach-to-firmware)"  # noqa: E501
+                  '\n\nThe entire boot firmware stack for the Mt. Jade is open source and available in the Github.' \
+                  '\n\n* **EDK2**: The PEI and minimal (stripped-down) DXE drivers, including both common and platform code, are fully open source and resides in Tianocore edk2-platforms and edk2 repositories.'\
+                  '\n* **LinuxBoot**: The LinuxBoot binary ([flashkernel](../glossary.md)) for Mt. Jade is supported in the [linuxboot/linuxboot](https://github.com/linuxboot/linuxboot/tree/main/mainboards/ampere/jade) repository.' \
+                  '\n\n## Ampere Solution for LinuxBoot as a Boot Device Selection'\
+                  '\nAmpere has implemented and successfully upstreamed a solution for integrating LinuxBoot as a Boot Device Selection (BDS) option into the TianoCore EDK2 framework, as seen in commit [ArmPkg: Implement PlatformBootManagerLib for LinuxBoot](https://github.com/tianocore/edk2/commit/62540372230ecb5318a9c8a40580a14beeb9ded0). This innovation simplifies the boot process for the Mt. Jade platform and aligns with LinuxBoot\'s goals of efficiency and flexibility.'\
+                  '\n\nUnlike the earlier practice that replaced the UEFI Shell with a LinuxBoot flashkernel, Ampere\'s solution introduces a custom BDS implementation that directly boots into the LinuxBoot environment as the active boot option. This approach bypasses the need to load the UEFI Shell or UiApp (UEFI Setup Menu), which depend on numerous unnecessary DXE drivers.'\
+                  '\n\nTo further enhance flexibility, Ampere introduced a new GUID specifically for the LinuxBoot binary, ensuring clear separation from the UEFI Shell GUID. This distinction allows precise identification of LinuxBoot components in the firmware.'\
+                  '\n\n## Build Process'\
+                  '\nBuilding a flashable EDK2 firmware image with an integrated LinuxBoot flashkernel for the Ampere Mt. Jade platform involves two main steps: building the LinuxBoot flashkernel and integrating it into the EDK2 firmware build.'\
+                  '\n\n### Step 1: Build the LinuxBoot Flashkernel'\
+                  '\nThe LinuxBoot flash kernel is built as follows:'\
+                  '\n\n```bash\ngit clone https://github.com/linuxboot/linuxboot.git'\
+                  '\ncd linuxboot/mainboards/ampere/jade && make fetch flashkernel'\
+                  '\n```' \
+                  '\n\nAfter the build process completes, the flash kernel will be located at: linuxboot/mainboards/ampere/jade/flashkernel'\
+                  '\n\n### Step 2: Build the EDK2 Firmware Image with the Flash Kernel'\
+                  '\nThe EDK2 firmware image is built with the LinuxBoot flashkernel integrated into the flash image using the following steps:'\
+                  '\n\n```bash'\
+                  '\ngit clone https://github.com/tianocore/edk2-platforms.git'\
+                  '\ngit clone https://github.com/tianocore/edk2.git'\
+                  '\ngit clone https://github.com/tianocore/edk2-non-osi.git'\
+                  '\n./edk2-platforms/Platform/Ampere/buildfw.sh -b RELEASE -t GCC -p Jade -l linuxboot/mainboards/ampere/jade/flashkernel'\
+                  '\n```'\
+                  '\n\nThe `buildfw.sh` script automatically integrates the LinuxBoot flash kernel (provided via the -l option) as part of the final EDK2 firmware image.'\
+                  '\n\nThis process generates a flashable EDK2 firmware image with embedded LinuxBoot, ready for deployment on the Ampere Mt. Jade platform.'\
+                  '\n\n## Booting with LinuxBoot\nWhen powered on, the system will boot into the u-root and automatically kexec to the target OS.'\
+                  '\n\n```text'\
+                  '\nRun /init as init process'\
+                  '\n1970/01/01 00:00:10 Welcome to u-root!'\
+                  '\n...'\
+                  '\n```'\
+                  '\n\n## Future Work'\
+                  '\nWhile the LinuxBoot implementation on the Ampere Mt. Jade platform represents a significant milestone, several advanced features and improvements remain to be explored. These enhancements would extend the platform\'s capabilities, improve its usability, and reinforce its position as a leading open source firmware solution. Key areas for future development include:'\
+                  '\n\n### Secure Boot with LinuxBoot'\
+                  '\nOne of the critical areas for future development is enabling secure boot verification for the target operating system. In the LinuxBoot environment, the target OS is typically booted using kexec. However, it is unclear how Secure Boot operates in this context, as kexec bypasses traditional firmware-controlled secure boot mechanisms. Future work should investigate how to extend Secure Boot principles to kexec, ensuring that the OS kernel and its components are verified and authenticated before execution. This may involve implementing signature checks and utilizing trusted certificate chains directly within the LinuxBoot environment to mimic the functionality of UEFI Secure Boot during the kexec process.'\
+                  '\n\n### TPM Support'\
+                  '\nThe platform supports TPM, but its integration with LinuxBoot is yet to be defined. Future work could explore utilizing the TPM for secure boot measurements, and system integrity attestation.'\
+                  '\n\n### Expanding Support for Additional Ampere Platforms'\
+                  '\nBuilding on the success of LinuxBoot on Mt. Jade, future efforts should expand support to other Ampere platforms. This would ensure broader adoption and usability across different hardware configurations.'\
+                  '\n\n### Optimizing the Transition Between UEFI and LinuxBoot'\
+                  '\nImproving the efficiency of the handoff between UEFI and LinuxBoot could further reduce boot times. This optimization would involve refining the initialization process and minimizing redundant operations during the handoff.'\
+                  '\n\n### Advanced Diagnostics and Monitoring Tools'\
+                  '\nAdding more diagnostic and monitoring tools to the LinuxBoot u-root environment would enhance debugging and system management. These tools could provide deeper insights into system performance and potential issues, improving reliability and maintainability.'\
+                  '\n\n## See Also'\
+                  '\n* [LinuxBoot on Ampere Platforms: A new (old) approach to firmware](https://amperecomputing.com/blogs/linuxboot-on-ampere-platforms--a-new-old-approach-to-firmware)'  # noqa: E501
         markdown = MarkdownSplitter(keep_headers=True, keep_trace=True, overlap=30)
         splits = markdown._split(md_text, 300)
         merged = markdown._merge(splits, 300)
@@ -351,47 +352,47 @@ class TestMarkdownSplitter:
             assert merged[i].metadata.get('header') is None
 
     def test_keep_code_blocks(self):
-        md_text = "\n\n# LinuxBoot on Ampere Mt. Jade Platform\nThe Ampere Altra Family processor based Mt. Jade platform is a high-performance ARM server platform, offering up to 256 processor cores in a dual socket configuration. The Tianocore EDK2 firmware for the Mt. Jade platform has been fully upstreamed to the tianocore/edk2-platforms repository, enabling the community to build and experiment with the platform's firmware using entirely open-source code. It also supports LinuxBoot, an open-source firmware framework that reduces boot time, enhances security, and increases flexibility compared to standard UEFI firmware.\n\nMt. Jade has also achieved a significant milestone by becoming [the first server certified under the Arm SystemReady LS certification program](https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/arm-systemready-ls). SystemReady LS ensures compliance with standardized boot and runtime environments for Linux-based systems, enabling seamless deployment across diverse hardware. This certification further emphasizes Mt. Jade's readiness for enterprise and cloud-scale adoption by providing assurance of compatibility, performance, and reliability.\n\nThis case study explores the LinuxBoot implementation on the Ampere Mt. Jade platform, inspired by the approach used in [Google's LinuxBoot deployment](Google_study.md).\n\n## Ampere EDK2-LinuxBoot Components\nThe Mt. Jade platform embraces a hybrid firmware architecture, combining UEFI/EDK2 for hardware initialization and LinuxBoot for advanced boot functionalities. The platform aligns closely with step 6 in the LinuxBoot adoption model.\n\n<img src=\"../images/Case-study-Ampere.svg\">\n\nThe entire boot firmware stack for the Mt. Jade is open source and available in the Github.\n\n* **EDK2**: The PEI and minimal (stripped-down) DXE drivers, including both common and platform code, are fully open source and resides in Tianocore edk2-platforms and edk2 repositories.\n* **LinuxBoot**: The LinuxBoot binary ([flashkernel](../glossary.md)) for Mt. Jade is supported in the [linuxboot/linuxboot](https://github.com/linuxboot/linuxboot/tree/main/mainboards/ampere/jade) repository.\n\n## Ampere Solution for LinuxBoot as a Boot Device Selection\nAmpere has implemented and successfully upstreamed a solution for integrating LinuxBoot as a Boot Device Selection (BDS) option into the TianoCore EDK2 framework, as seen in commit [ArmPkg: Implement PlatformBootManagerLib for LinuxBoot](https://github.com/tianocore/edk2/commit/62540372230ecb5318a9c8a40580a14beeb9ded0). This innovation simplifies the boot process for the Mt. Jade platform and aligns with LinuxBoot's goals of efficiency and flexibility.\n\nUnlike the earlier practice that replaced the UEFI Shell with a LinuxBoot flashkernel, Ampere's solution introduces a custom BDS implementation that directly boots into the LinuxBoot environment as the active boot option. This approach bypasses the need to load the UEFI Shell or UiApp (UEFI Setup Menu), which depend on numerous unnecessary DXE drivers.\n\nTo further enhance flexibility, Ampere introduced a new GUID specifically for the LinuxBoot binary, ensuring clear separation from the UEFI Shell GUID. This distinction allows precise identification of LinuxBoot components in the firmware.\n\n## Build Process\nBuilding a flashable EDK2 firmware image with an integrated LinuxBoot flashkernel for the Ampere Mt. Jade platform involves two main steps: building the LinuxBoot flashkernel and integrating it into the EDK2 firmware build.\n\n### Step 1: Build the LinuxBoot Flashkernel\nThe LinuxBoot flash kernel is built as follows:\n\n```bash\ngit clone https://github.com/linuxboot/linuxboot.git\ncd linuxboot/mainboards/ampere/jade && make fetch flashkernel\n```\n\nAfter the build process completes, the flash kernel will be located at: linuxboot/mainboards/ampere/jade/flashkernel\n\n### Step 2: Build the EDK2 Firmware Image with the Flash Kernel\nThe EDK2 firmware image is built with the LinuxBoot flashkernel integrated into the flash image using the following steps:\n\n```bash\ngit clone https://github.com/tianocore/edk2-platforms.git\ngit clone https://github.com/tianocore/edk2.git\ngit clone https://github.com/tianocore/edk2-non-osi.git\n./edk2-platforms/Platform/Ampere/buildfw.sh -b RELEASE -t GCC -p Jade -l linuxboot/mainboards/ampere/jade/flashkernel\n```\n\nThe `buildfw.sh` script automatically integrates the LinuxBoot flash kernel (provided via the -l option) as part of the final EDK2 firmware image.\n\nThis process generates a flashable EDK2 firmware image with embedded LinuxBoot, ready for deployment on the Ampere Mt. Jade platform.\n\n## Booting with LinuxBoot\nWhen powered on, the system will boot into the u-root and automatically kexec to the target OS.\n\n```text\nRun /init as init process\n1970/01/01 00:00:10 Welcome to u-root!\n...\n```\n\n## Future Work\nWhile the LinuxBoot implementation on the Ampere Mt. Jade platform represents a significant milestone, several advanced features and improvements remain to be explored. These enhancements would extend the platform's capabilities, improve its usability, and reinforce its position as a leading open source firmware solution. Key areas for future development include:\n\n### Secure Boot with LinuxBoot\nOne of the critical areas for future development is enabling secure boot verification for the target operating system. In the LinuxBoot environment, the target OS is typically booted using kexec. However, it is unclear how Secure Boot operates in this context, as kexec bypasses traditional firmware-controlled secure boot mechanisms. Future work should investigate how to extend Secure Boot principles to kexec, ensuring that the OS kernel and its components are verified and authenticated before execution. This may involve implementing signature checks and utilizing trusted certificate chains directly within the LinuxBoot environment to mimic the functionality of UEFI Secure Boot during the kexec process.\n\n### TPM Support\nThe platform supports TPM, but its integration with LinuxBoot is yet to be defined. Future work could explore utilizing the TPM for secure boot measurements, and system integrity attestation.\n\n### Expanding Support for Additional Ampere Platforms\nBuilding on the success of LinuxBoot on Mt. Jade, future efforts should expand support to other Ampere platforms. This would ensure broader adoption and usability across different hardware configurations.\n\n### Optimizing the Transition Between UEFI and LinuxBoot\nImproving the efficiency of the handoff between UEFI and LinuxBoot could further reduce boot times. This optimization would involve refining the initialization process and minimizing redundant operations during the handoff.\n\n### Advanced Diagnostics and Monitoring Tools\nAdding more diagnostic and monitoring tools to the LinuxBoot u-root environment would enhance debugging and system management. These tools could provide deeper insights into system performance and potential issues, improving reliability and maintainability.\n\n## See Also\n* [LinuxBoot on Ampere Platforms: A new (old) approach to firmware](https://amperecomputing.com/blogs/linuxboot-on-ampere-platforms--a-new-old-approach-to-firmware)"  # noqa: E501
+        md_text = '\n\n# LinuxBoot on Ampere Mt. Jade Platform\nThe Ampere Altra Family processor based Mt. Jade platform is a high-performance ARM server platform, offering up to 256 processor cores in a dual socket configuration. The Tianocore EDK2 firmware for the Mt. Jade platform has been fully upstreamed to the tianocore/edk2-platforms repository, enabling the community to build and experiment with the platform\'s firmware using entirely open-source code. It also supports LinuxBoot, an open-source firmware framework that reduces boot time, enhances security, and increases flexibility compared to standard UEFI firmware.\n\nMt. Jade has also achieved a significant milestone by becoming [the first server certified under the Arm SystemReady LS certification program](https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/arm-systemready-ls). SystemReady LS ensures compliance with standardized boot and runtime environments for Linux-based systems, enabling seamless deployment across diverse hardware. This certification further emphasizes Mt. Jade\'s readiness for enterprise and cloud-scale adoption by providing assurance of compatibility, performance, and reliability.\n\nThis case study explores the LinuxBoot implementation on the Ampere Mt. Jade platform, inspired by the approach used in [Google\'s LinuxBoot deployment](Google_study.md).\n\n## Ampere EDK2-LinuxBoot Components\nThe Mt. Jade platform embraces a hybrid firmware architecture, combining UEFI/EDK2 for hardware initialization and LinuxBoot for advanced boot functionalities. The platform aligns closely with step 6 in the LinuxBoot adoption model.\n\n<img src=\"../images/Case-study-Ampere.svg\">\n\nThe entire boot firmware stack for the Mt. Jade is open source and available in the Github.\n\n* **EDK2**: The PEI and minimal (stripped-down) DXE drivers, including both common and platform code, are fully open source and resides in Tianocore edk2-platforms and edk2 repositories.\n* **LinuxBoot**: The LinuxBoot binary ([flashkernel](../glossary.md)) for Mt. Jade is supported in the [linuxboot/linuxboot](https://github.com/linuxboot/linuxboot/tree/main/mainboards/ampere/jade) repository.\n\n## Ampere Solution for LinuxBoot as a Boot Device Selection\nAmpere has implemented and successfully upstreamed a solution for integrating LinuxBoot as a Boot Device Selection (BDS) option into the TianoCore EDK2 framework, as seen in commit [ArmPkg: Implement PlatformBootManagerLib for LinuxBoot](https://github.com/tianocore/edk2/commit/62540372230ecb5318a9c8a40580a14beeb9ded0). This innovation simplifies the boot process for the Mt. Jade platform and aligns with LinuxBoot\'s goals of efficiency and flexibility.\n\nUnlike the earlier practice that replaced the UEFI Shell with a LinuxBoot flashkernel, Ampere\'s solution introduces a custom BDS implementation that directly boots into the LinuxBoot environment as the active boot option. This approach bypasses the need to load the UEFI Shell or UiApp (UEFI Setup Menu), which depend on numerous unnecessary DXE drivers.\n\nTo further enhance flexibility, Ampere introduced a new GUID specifically for the LinuxBoot binary, ensuring clear separation from the UEFI Shell GUID. This distinction allows precise identification of LinuxBoot components in the firmware.\n\n## Build Process\nBuilding a flashable EDK2 firmware image with an integrated LinuxBoot flashkernel for the Ampere Mt. Jade platform involves two main steps: building the LinuxBoot flashkernel and integrating it into the EDK2 firmware build.\n\n### Step 1: Build the LinuxBoot Flashkernel\nThe LinuxBoot flash kernel is built as follows:\n\n```bash\ngit clone https://github.com/linuxboot/linuxboot.git\ncd linuxboot/mainboards/ampere/jade && make fetch flashkernel\n```\n\nAfter the build process completes, the flash kernel will be located at: linuxboot/mainboards/ampere/jade/flashkernel\n\n### Step 2: Build the EDK2 Firmware Image with the Flash Kernel\nThe EDK2 firmware image is built with the LinuxBoot flashkernel integrated into the flash image using the following steps:\n\n```bash\ngit clone https://github.com/tianocore/edk2-platforms.git\ngit clone https://github.com/tianocore/edk2.git\ngit clone https://github.com/tianocore/edk2-non-osi.git\n./edk2-platforms/Platform/Ampere/buildfw.sh -b RELEASE -t GCC -p Jade -l linuxboot/mainboards/ampere/jade/flashkernel\n```\n\nThe `buildfw.sh` script automatically integrates the LinuxBoot flash kernel (provided via the -l option) as part of the final EDK2 firmware image.\n\nThis process generates a flashable EDK2 firmware image with embedded LinuxBoot, ready for deployment on the Ampere Mt. Jade platform.\n\n## Booting with LinuxBoot\nWhen powered on, the system will boot into the u-root and automatically kexec to the target OS.\n\n```text\nRun /init as init process\n1970/01/01 00:00:10 Welcome to u-root!\n...\n```\n\n## Future Work\nWhile the LinuxBoot implementation on the Ampere Mt. Jade platform represents a significant milestone, several advanced features and improvements remain to be explored. These enhancements would extend the platform\'s capabilities, improve its usability, and reinforce its position as a leading open source firmware solution. Key areas for future development include:\n\n### Secure Boot with LinuxBoot\nOne of the critical areas for future development is enabling secure boot verification for the target operating system. In the LinuxBoot environment, the target OS is typically booted using kexec. However, it is unclear how Secure Boot operates in this context, as kexec bypasses traditional firmware-controlled secure boot mechanisms. Future work should investigate how to extend Secure Boot principles to kexec, ensuring that the OS kernel and its components are verified and authenticated before execution. This may involve implementing signature checks and utilizing trusted certificate chains directly within the LinuxBoot environment to mimic the functionality of UEFI Secure Boot during the kexec process.\n\n### TPM Support\nThe platform supports TPM, but its integration with LinuxBoot is yet to be defined. Future work could explore utilizing the TPM for secure boot measurements, and system integrity attestation.\n\n### Expanding Support for Additional Ampere Platforms\nBuilding on the success of LinuxBoot on Mt. Jade, future efforts should expand support to other Ampere platforms. This would ensure broader adoption and usability across different hardware configurations.\n\n### Optimizing the Transition Between UEFI and LinuxBoot\nImproving the efficiency of the handoff between UEFI and LinuxBoot could further reduce boot times. This optimization would involve refining the initialization process and minimizing redundant operations during the handoff.\n\n### Advanced Diagnostics and Monitoring Tools\nAdding more diagnostic and monitoring tools to the LinuxBoot u-root environment would enhance debugging and system management. These tools could provide deeper insights into system performance and potential issues, improving reliability and maintainability.\n\n## See Also\n* [LinuxBoot on Ampere Platforms: A new (old) approach to firmware](https://amperecomputing.com/blogs/linuxboot-on-ampere-platforms--a-new-old-approach-to-firmware)'  # noqa: E501
         markdown = MarkdownSplitter(keep_headers=False, keep_trace=False, overlap=30, keep_code_blocks=True)
         splits = markdown._split(md_text, 300)
         expected_splits = [
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform'], level=1, header='LinuxBoot on Ampere Mt. Jade Platform', content="The Ampere Altra Family processor based Mt. Jade platform is a high-performance ARM server platform, offering up to 256 processor cores in a dual socket configuration. The Tianocore EDK2 firmware for the Mt. Jade platform has been fully upstreamed to the tianocore/edk2-platforms repository, enabling the community to build and experiment with the platform's firmware using entirely open-source code. It also supports LinuxBoot, an open-source firmware framework that reduces boot time, enhances security, and increases flexibility compared to standard UEFI firmware.\n\nMt. Jade has also achieved a significant milestone by becoming [the first server certified under the Arm SystemReady LS certification program](https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/arm-systemready-ls). SystemReady LS ensures compliance with standardized boot and runtime environments for Linux-based systems, enabling seamless deployment across diverse hardware. This certification further emphasizes Mt. Jade's readiness for enterprise and cloud-scale adoption by providing assurance of compatibility, performance, and reliability.\n\nThis case study explores the LinuxBoot implementation on the Ampere Mt. Jade platform, inspired by the approach used in [Google's LinuxBoot deployment](Google_study.md).", token_size=271, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform'], level=1, header='LinuxBoot on Ampere Mt. Jade Platform', content="The Ampere Altra Family processor based Mt. Jade platform is a high-performance ARM server platform, offering up to 256 processor cores in a dual socket configuration. The Tianocore EDK2 firmware for the Mt. Jade platform has been fully upstreamed to the tianocore/edk2-platforms repository, enabling the community to build and experiment with the platform's firmware using entirely open-source code. It also supports LinuxBoot, an open-source firmware framework that reduces boot time, enhances security, and increases flexibility compared to standard UEFI firmware.\n\nMt. Jade has also achieved a significant milestone by becoming [the first server certified under the Arm SystemReady LS certification program](https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/arm-systemready-ls). SystemReady LS ensures compliance with standardized boot and runtime environments for Linux-based systems, enabling seamless deployment across diverse hardware. This certification further emphasizes Mt. Jade's readiness for enterprise and cloud-scale adoption by providing assurance of compatibility, performance, and reliability.\n\nThis case study explores the LinuxBoot implementation on the Ampere Mt. Jade platform, inspired by the approach used in [Google's LinuxBoot deployment](Google_study.md).", token_size=271, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Ampere EDK2-LinuxBoot Components'], level=2, header='Ampere EDK2-LinuxBoot Components', content='The Mt. Jade platform embraces a hybrid firmware architecture, combining UEFI/EDK2 for hardware initialization and LinuxBoot for advanced boot functionalities. The platform aligns closely with step 6 in the LinuxBoot adoption model.\n\n<img src="../images/Case-study-Ampere.svg">\n\nThe entire boot firmware stack for the Mt. Jade is open source and available in the Github.\n\n* **EDK2**: The PEI and minimal (stripped-down) DXE drivers, including both common and platform code, are fully open source and resides in Tianocore edk2-platforms and edk2 repositories.\n* **LinuxBoot**: The LinuxBoot binary ([flashkernel](../glossary.md)) for Mt. Jade is supported in the [linuxboot/linuxboot](https://github.com/linuxboot/linuxboot/tree/main/mainboards/ampere/jade) repository.', token_size=204, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Ampere EDK2-LinuxBoot Components'], level=2, header='Ampere EDK2-LinuxBoot Components', content='The Mt. Jade platform embraces a hybrid firmware architecture, combining UEFI/EDK2 for hardware initialization and LinuxBoot for advanced boot functionalities. The platform aligns closely with step 6 in the LinuxBoot adoption model.\n\n<img src="../images/Case-study-Ampere.svg">\n\nThe entire boot firmware stack for the Mt. Jade is open source and available in the Github.\n\n* **EDK2**: The PEI and minimal (stripped-down) DXE drivers, including both common and platform code, are fully open source and resides in Tianocore edk2-platforms and edk2 repositories.\n* **LinuxBoot**: The LinuxBoot binary ([flashkernel](../glossary.md)) for Mt. Jade is supported in the [linuxboot/linuxboot](https://github.com/linuxboot/linuxboot/tree/main/mainboards/ampere/jade) repository.', token_size=204, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Ampere Solution for LinuxBoot as a Boot Device Selection'], level=2, header='Ampere Solution for LinuxBoot as a Boot Device Selection', content="Ampere has implemented and successfully upstreamed a solution for integrating LinuxBoot as a Boot Device Selection (BDS) option into the TianoCore EDK2 framework, as seen in commit [ArmPkg: Implement PlatformBootManagerLib for LinuxBoot](https://github.com/tianocore/edk2/commit/62540372230ecb5318a9c8a40580a14beeb9ded0). This innovation simplifies the boot process for the Mt. Jade platform and aligns with LinuxBoot's goals of efficiency and flexibility.\n\nUnlike the earlier practice that replaced the UEFI Shell with a LinuxBoot flashkernel, Ampere's solution introduces a custom BDS implementation that directly boots into the LinuxBoot environment as the active boot option. This approach bypasses the need to load the UEFI Shell or UiApp (UEFI Setup Menu), which depend on numerous unnecessary DXE drivers.\n\nTo further enhance flexibility, Ampere introduced a new GUID specifically for the LinuxBoot binary, ensuring clear separation from the UEFI Shell GUID. This distinction allows precise identification of LinuxBoot components in the firmware.", token_size=240, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Ampere Solution for LinuxBoot as a Boot Device Selection'], level=2, header='Ampere Solution for LinuxBoot as a Boot Device Selection', content="Ampere has implemented and successfully upstreamed a solution for integrating LinuxBoot as a Boot Device Selection (BDS) option into the TianoCore EDK2 framework, as seen in commit [ArmPkg: Implement PlatformBootManagerLib for LinuxBoot](https://github.com/tianocore/edk2/commit/62540372230ecb5318a9c8a40580a14beeb9ded0). This innovation simplifies the boot process for the Mt. Jade platform and aligns with LinuxBoot's goals of efficiency and flexibility.\n\nUnlike the earlier practice that replaced the UEFI Shell with a LinuxBoot flashkernel, Ampere's solution introduces a custom BDS implementation that directly boots into the LinuxBoot environment as the active boot option. This approach bypasses the need to load the UEFI Shell or UiApp (UEFI Setup Menu), which depend on numerous unnecessary DXE drivers.\n\nTo further enhance flexibility, Ampere introduced a new GUID specifically for the LinuxBoot binary, ensuring clear separation from the UEFI Shell GUID. This distinction allows precise identification of LinuxBoot components in the firmware.", token_size=240, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process'], level=2, header='Build Process', content='Building a flashable EDK2 firmware image with an integrated LinuxBoot flashkernel for the Ampere Mt. Jade platform involves two main steps: building the LinuxBoot flashkernel and integrating it into the EDK2 firmware build.', token_size=47, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process'], level=2, header='Build Process', content='Building a flashable EDK2 firmware image with an integrated LinuxBoot flashkernel for the Ampere Mt. Jade platform involves two main steps: building the LinuxBoot flashkernel and integrating it into the EDK2 firmware build.', token_size=47, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process', 'Step 1: Build the LinuxBoot Flashkernel'], level=3, header='Step 1: Build the LinuxBoot Flashkernel', content='The LinuxBoot flash kernel is built as follows:', token_size=10, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process', 'Step 1: Build the LinuxBoot Flashkernel'], level=3, header='Step 1: Build the LinuxBoot Flashkernel', content='The LinuxBoot flash kernel is built as follows:', token_size=10, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process', 'Step 1: Build the LinuxBoot Flashkernel'], level=3, header='Step 1: Build the LinuxBoot Flashkernel', content='git clone https://github.com/linuxboot/linuxboot.git\ncd linuxboot/mainboards/ampere/jade && make fetch flashkernel', token_size=34, type='bash'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process', 'Step 1: Build the LinuxBoot Flashkernel'], level=3, header='Step 1: Build the LinuxBoot Flashkernel', content='git clone https://github.com/linuxboot/linuxboot.git\ncd linuxboot/mainboards/ampere/jade && make fetch flashkernel', token_size=34, type='bash'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process', 'Step 1: Build the LinuxBoot Flashkernel'], level=3, header='Step 1: Build the LinuxBoot Flashkernel', content='After the build process completes, the flash kernel will be located at: linuxboot/mainboards/ampere/jade/flashkernel', token_size=29, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process', 'Step 1: Build the LinuxBoot Flashkernel'], level=3, header='Step 1: Build the LinuxBoot Flashkernel', content='After the build process completes, the flash kernel will be located at: linuxboot/mainboards/ampere/jade/flashkernel', token_size=29, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process', 'Step 2: Build the EDK2 Firmware Image with the Flash Kernel'], level=3, header='Step 2: Build the EDK2 Firmware Image with the Flash Kernel', content='The EDK2 firmware image is built with the LinuxBoot flashkernel integrated into the flash image using the following steps:', token_size=24, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process', 'Step 2: Build the EDK2 Firmware Image with the Flash Kernel'], level=3, header='Step 2: Build the EDK2 Firmware Image with the Flash Kernel', content='The EDK2 firmware image is built with the LinuxBoot flashkernel integrated into the flash image using the following steps:', token_size=24, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process', 'Step 2: Build the EDK2 Firmware Image with the Flash Kernel'], level=3, header='Step 2: Build the EDK2 Firmware Image with the Flash Kernel', content='git clone https://github.com/tianocore/edk2-platforms.git\ngit clone https://github.com/tianocore/edk2.git\ngit clone https://github.com/tianocore/edk2-non-osi.git\n./edk2-platforms/Platform/Ampere/buildfw.sh -b RELEASE -t GCC -p Jade -l linuxboot/mainboards/ampere/jade/flashkernel', token_size=108, type='bash'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process', 'Step 2: Build the EDK2 Firmware Image with the Flash Kernel'], level=3, header='Step 2: Build the EDK2 Firmware Image with the Flash Kernel', content='git clone https://github.com/tianocore/edk2-platforms.git\ngit clone https://github.com/tianocore/edk2.git\ngit clone https://github.com/tianocore/edk2-non-osi.git\n./edk2-platforms/Platform/Ampere/buildfw.sh -b RELEASE -t GCC -p Jade -l linuxboot/mainboards/ampere/jade/flashkernel', token_size=108, type='bash'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process', 'Step 2: Build the EDK2 Firmware Image with the Flash Kernel'], level=3, header='Step 2: Build the EDK2 Firmware Image with the Flash Kernel', content='The `buildfw.sh` script automatically integrates the LinuxBoot flash kernel (provided via the -l option) as part of the final EDK2 firmware image.\n\nThis process generates a flashable EDK2 firmware image with embedded LinuxBoot, ready for deployment on the Ampere Mt. Jade platform.', token_size=65, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Build Process', 'Step 2: Build the EDK2 Firmware Image with the Flash Kernel'], level=3, header='Step 2: Build the EDK2 Firmware Image with the Flash Kernel', content='The `buildfw.sh` script automatically integrates the LinuxBoot flash kernel (provided via the -l option) as part of the final EDK2 firmware image.\n\nThis process generates a flashable EDK2 firmware image with embedded LinuxBoot, ready for deployment on the Ampere Mt. Jade platform.', token_size=65, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Booting with LinuxBoot'], level=2, header='Booting with LinuxBoot', content='When powered on, the system will boot into the u-root and automatically kexec to the target OS.', token_size=23, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Booting with LinuxBoot'], level=2, header='Booting with LinuxBoot', content='When powered on, the system will boot into the u-root and automatically kexec to the target OS.', token_size=23, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Booting with LinuxBoot'], level=2, header='Booting with LinuxBoot', content='Run /init as init process\n1970/01/01 00:00:10 Welcome to u-root!\n...', token_size=25, type='text'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Booting with LinuxBoot'], level=2, header='Booting with LinuxBoot', content='Run /init as init process\n1970/01/01 00:00:10 Welcome to u-root!\n...', token_size=25, type='text'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Future Work'], level=2, header='Future Work', content="While the LinuxBoot implementation on the Ampere Mt. Jade platform represents a significant milestone, several advanced features and improvements remain to be explored. These enhancements would extend the platform's capabilities, improve its usability, and reinforce its position as a leading open source firmware solution. Key areas for future development include:", token_size=61, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Future Work'], level=2, header='Future Work', content="While the LinuxBoot implementation on the Ampere Mt. Jade platform represents a significant milestone, several advanced features and improvements remain to be explored. These enhancements would extend the platform's capabilities, improve its usability, and reinforce its position as a leading open source firmware solution. Key areas for future development include:", token_size=61, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Future Work', 'Secure Boot with LinuxBoot'], level=3, header='Secure Boot with LinuxBoot', content='One of the critical areas for future development is enabling secure boot verification for the target operating system. In the LinuxBoot environment, the target OS is typically booted using kexec. However, it is unclear how Secure Boot operates in this context, as kexec bypasses traditional firmware-controlled secure boot mechanisms. Future work should investigate how to extend Secure Boot principles to kexec, ensuring that the OS kernel and its components are verified and authenticated before execution. This may involve implementing signature checks and utilizing trusted certificate chains directly within the LinuxBoot environment to mimic the functionality of UEFI Secure Boot during the kexec process.', token_size=126, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Future Work', 'Secure Boot with LinuxBoot'], level=3, header='Secure Boot with LinuxBoot', content='One of the critical areas for future development is enabling secure boot verification for the target operating system. In the LinuxBoot environment, the target OS is typically booted using kexec. However, it is unclear how Secure Boot operates in this context, as kexec bypasses traditional firmware-controlled secure boot mechanisms. Future work should investigate how to extend Secure Boot principles to kexec, ensuring that the OS kernel and its components are verified and authenticated before execution. This may involve implementing signature checks and utilizing trusted certificate chains directly within the LinuxBoot environment to mimic the functionality of UEFI Secure Boot during the kexec process.', token_size=126, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Future Work', 'TPM Support'], level=3, header='TPM Support', content='The platform supports TPM, but its integration with LinuxBoot is yet to be defined. Future work could explore utilizing the TPM for secure boot measurements, and system integrity attestation.', token_size=37, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Future Work', 'TPM Support'], level=3, header='TPM Support', content='The platform supports TPM, but its integration with LinuxBoot is yet to be defined. Future work could explore utilizing the TPM for secure boot measurements, and system integrity attestation.', token_size=37, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Future Work', 'Expanding Support for Additional Ampere Platforms'], level=3, header='Expanding Support for Additional Ampere Platforms', content='Building on the success of LinuxBoot on Mt. Jade, future efforts should expand support to other Ampere platforms. This would ensure broader adoption and usability across different hardware configurations.', token_size=36, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Future Work', 'Expanding Support for Additional Ampere Platforms'], level=3, header='Expanding Support for Additional Ampere Platforms', content='Building on the success of LinuxBoot on Mt. Jade, future efforts should expand support to other Ampere platforms. This would ensure broader adoption and usability across different hardware configurations.', token_size=36, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Future Work', 'Optimizing the Transition Between UEFI and LinuxBoot'], level=3, header='Optimizing the Transition Between UEFI and LinuxBoot', content='Improving the efficiency of the handoff between UEFI and LinuxBoot could further reduce boot times. This optimization would involve refining the initialization process and minimizing redundant operations during the handoff.', token_size=37, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Future Work', 'Optimizing the Transition Between UEFI and LinuxBoot'], level=3, header='Optimizing the Transition Between UEFI and LinuxBoot', content='Improving the efficiency of the handoff between UEFI and LinuxBoot could further reduce boot times. This optimization would involve refining the initialization process and minimizing redundant operations during the handoff.', token_size=37, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Future Work', 'Advanced Diagnostics and Monitoring Tools'], level=3, header='Advanced Diagnostics and Monitoring Tools', content='Adding more diagnostic and monitoring tools to the LinuxBoot u-root environment would enhance debugging and system management. These tools could provide deeper insights into system performance and potential issues, improving reliability and maintainability.', token_size=40, type='content'),  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'Future Work', 'Advanced Diagnostics and Monitoring Tools'], level=3, header='Advanced Diagnostics and Monitoring Tools', content='Adding more diagnostic and monitoring tools to the LinuxBoot u-root environment would enhance debugging and system management. These tools could provide deeper insights into system performance and potential issues, improving reliability and maintainability.', token_size=40, type='content'),  # noqa: E501
 
-            _MD_Split(path=['LinuxBoot on Ampere Mt. Jade Platform', 'See Also'], level=2, header='See Also', content='* [LinuxBoot on Ampere Platforms: A new (old) approach to firmware](https://amperecomputing.com/blogs/linuxboot-on-ampere-platforms--a-new-old-approach-to-firmware)', token_size=59, type='content')]  # noqa: E501
+            _MdSplit(path=['LinuxBoot on Ampere Mt. Jade Platform', 'See Also'], level=2, header='See Also', content='* [LinuxBoot on Ampere Platforms: A new (old) approach to firmware](https://amperecomputing.com/blogs/linuxboot-on-ampere-platforms--a-new-old-approach-to-firmware)', token_size=59, type='content')]  # noqa: E501
         assert splits == expected_splits
         merged = markdown._merge(splits, 300)
         expected_merged = [
@@ -670,7 +671,7 @@ class TestTextSplitterBase:
         chunks = result.split_text(text, metadata_size=0)
         assert chunks == ['Test text']
 
-@pytest.mark.skip("skip for now")
+
 class TestTokenTextSplitter:
     def test_token_splitter_basic(self):
         token_splitter = _TokenTextSplitter(chunk_size=10, overlap=3)
@@ -750,7 +751,7 @@ class TestTokenTextSplitter:
             if overlap_size > 0:
                 assert tokens1[-overlap_size:] == tokens2[:overlap_size]
 
-@pytest.mark.skip("skip for now")
+
 class TestDocumentSplit:
     def setup_method(self):
         document = Document(
@@ -778,7 +779,7 @@ class TestDocumentSplit:
             overlap=0,
             separators=['\n\n', '\n', '.', ' ']
         )
-        llm = lazyllm.OnlineChatModule(source='qwen')
+        llm = lazyllm.OnlineChatModule(source='sensenova')
 
         prompt = '你将扮演一个人工智能问答助手的角色，完成一项对话任务。在这个任务中，你需要根据给定的上下文以及问题，给出你的回答。'
         llm.prompt(lazyllm.ChatPrompter(instruction=prompt, extra_keys=['context_str']))
@@ -827,7 +828,7 @@ class TestDocumentSplit:
         })
         assert res is not None
 
-@pytest.mark.skip("skip for now")
+
 class TestDocumentChainSplit:
     def setup_method(self):
         document = Document(
@@ -855,7 +856,7 @@ class TestDocumentChainSplit:
             separator=' ',
             parent='recursive_test'
         )
-        llm = lazyllm.OnlineChatModule(source='qwen')
+        llm = lazyllm.OnlineChatModule(source='sensenova')
         prompt = '你将扮演一个人工智能问答助手的角色，完成一项对话任务。在这个任务中，你需要根据给定的上下文以及问题，给出你的回答。'
         llm.prompt(lazyllm.ChatPrompter(instruction=prompt, extra_keys=['context_str']))
         query = '何为天道？'
@@ -903,7 +904,7 @@ class TestDocumentChainSplit:
         })
         assert res is not None
 
-@pytest.mark.skip("skip for now")
+
 class TestDIYDocumentSplit:
     def setup_method(self):
         document = Document(
@@ -923,7 +924,7 @@ class TestDIYDocumentSplit:
             transform=splitter,
             parent='sentence_test')
 
-        llm = lazyllm.OnlineChatModule(source='qwen')
+        llm = lazyllm.OnlineChatModule(source='sensenova')
         prompt = '你将扮演一个人工智能问答助手的角色，完成一项对话任务。在这个任务中，你需要根据给定的上下文以及问题，给出你的回答。'
         llm.prompt(lazyllm.ChatPrompter(instruction=prompt, extra_keys=['context_str']))
         query = '何为天道？'

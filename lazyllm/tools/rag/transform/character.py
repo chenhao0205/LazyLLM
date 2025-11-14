@@ -1,7 +1,7 @@
 from functools import partial
 import re
 
-from typing import List, Union, Tuple, Callable, Optional
+from typing import List, Union, Tuple, Callable, Optional, AbstractSet, Collection, Literal, Any
 from .base import _TextSplitterBase, _TokenTextSplitter, _Split
 
 class CharacterSplitter(_TextSplitterBase):
@@ -12,7 +12,17 @@ class CharacterSplitter(_TextSplitterBase):
         self._is_separator_regex = is_separator_regex
         self._keep_separator = keep_separator
         self._character_split_fns = []
-        self.token_splitter = _TokenTextSplitter(chunk_size=chunk_size, overlap=overlap)
+        self._cached_sep_pattern = self._get_separator_pattern(self._separator)
+        self._cached_default_split_fns = None
+
+    def from_tiktoken_encoder(self, encoding_name: str = 'gpt2', model_name: Optional[str] = None,
+                              allowed_special: Union[Literal['all'], AbstractSet[str]] = None,
+                              disallowed_special: Union[Literal['all'], Collection[str]] = None,
+                              **kwargs) -> 'CharacterSplitter':
+        return super().from_tiktoken_encoder(encoding_name, model_name, allowed_special, disallowed_special, **kwargs)
+
+    def from_huggingface_tokenizer(self, tokenizer: Any, **kwargs) -> 'CharacterSplitter':
+        return super().from_huggingface_tokenizer(tokenizer, **kwargs)
 
     def split_text(self, text: str, metadata_size: int) -> List[str]:
         return super().split_text(text, metadata_size)
@@ -25,7 +35,8 @@ class CharacterSplitter(_TextSplitterBase):
         text_splits, is_sentence = self._get_splits_by_fns(text)
 
         if len(text_splits) == 1 and self._token_size(text_splits[0]) > chunk_size:
-            token_sub_texts = self.token_splitter.split_text(text_splits[0], metadata_size=0)
+            token_splitter = _TokenTextSplitter(chunk_size=chunk_size, overlap=self._overlap)
+            token_sub_texts = token_splitter.split_text(text_splits[0], metadata_size=0)
             return [
                 _Split(s, is_sentence=is_sentence, token_size=self._token_size(s))
                 for s in token_sub_texts
@@ -55,15 +66,15 @@ class CharacterSplitter(_TextSplitterBase):
         self._character_split_fns = []
 
     def _get_splits_by_fns(self, text: str) -> Tuple[List[str], bool]:
-        sep_pattern = self._get_separator_pattern(self._separator)
-
         character_split_fns = self._character_split_fns
         if character_split_fns == []:
-            character_split_fns = [
-                partial(self.default_split, sep_pattern),
-                lambda t: t.split(' '),
-                list
-            ]
+            if self._cached_default_split_fns is None:
+                self._cached_default_split_fns = [
+                    partial(self.default_split, self._cached_sep_pattern),
+                    lambda t: t.split(' '),
+                    list
+                ]
+            character_split_fns = self._cached_default_split_fns
 
         for split_fn in character_split_fns:
             splits = split_fn(text)

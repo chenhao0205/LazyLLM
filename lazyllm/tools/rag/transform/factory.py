@@ -3,7 +3,7 @@ import fnmatch
 
 from typing import Any, Dict, List, Union, Optional, Callable
 
-from lazyllm.tools.rag.doc_node import DocNode, QADocNode
+from ..doc_node import DocNode, QADocNode
 from lazyllm import LOG
 from .base import NodeTransform
 
@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 
 from lazyllm import TrainableModule
 from lazyllm.components.formatter import encode_query_with_filepaths
-from lazyllm.tools.rag.prompts import LLMTransformParserPrompts
+from ..prompts import LLMTransformParserPrompts
 
 @dataclass
 class TransformArgs():
@@ -71,34 +71,22 @@ class AdaptiveTransform(NodeTransform):
     def transform(self, document: DocNode, **kwargs) -> List[Union[str, DocNode]]:
         if not isinstance(document, DocNode): LOG.warning(f'Invalud document type {type(document)} got')
         for pt, transform in self._transformers:
-            if pt and isinstance(pt, str) and not pt.startswith('*'): pt = os.path.join(str(os.cwd()), pt)
+            if pt and isinstance(pt, str) and not pt.startswith('*'): pt = os.path.join(os.getcwd(), pt)
             if not pt or (callable(pt) and pt(document.docpath)) or (
                     isinstance(pt, str) and fnmatch.fnmatch(document.docpath, pt)):
                 return transform(document, **kwargs)
         LOG.warning(f'No transform found for document {document.docpath} with group name `{self._name}`')
         return []
 
+
 class FuncNodeTransform(NodeTransform):
-    '''Used for user defined function.
-
-    Wrapped the transform to: List[Docnode] -> List[Docnode]
-
-    This wrapper supports when trans_node is False:
-        1. str -> list: transform=lambda t: t.split('\n')
-        2. str -> str: transform=lambda t: t[:3]
-
-    This wrapper supports when trans_node is True:
-        1. DocNode -> list: pipeline(lambda x:x, SentenceSplitter)
-        2. DocNode -> DocNode: pipeline(LLMParser)
-    '''
-
     def __init__(self, func: Union[Callable[[str], List[str]], Callable[[DocNode], List[DocNode]]],
                  trans_node: bool = None, num_workers: int = 0):
         super(__class__, self).__init__(num_workers=num_workers)
         self._func, self._trans_node = func, trans_node
 
     def transform(self, node: DocNode, **kwargs) -> List[Union[str, DocNode]]:
-        return self._func(node if self._trans_node else node.get_text())
+        return self._func(node if self._trans_node else node.get_text(), **kwargs)
 
 
 class LLMParser(NodeTransform):
