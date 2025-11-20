@@ -20,6 +20,9 @@
     members: connect, upsert, delete, get, search
     exclude-members:
 
+::: lazyllm.tools.rag.store.hybrid.oceanbase_store.OceanBaseStore
+    members: connect, upsert, delete, get, search
+    exclude-members:
 
 ::: lazyllm.tools.rag.store.ElasticSearchStore
     members:
@@ -30,6 +33,10 @@
     exclude-members:
 
 ::: lazyllm.tools.rag.readers.readerBase.LazyLLMReaderBase
+    members:
+	exclude-members:
+
+::: lazyllm.tools.rag.readers.readerBase.TxtReader
     members:
 	exclude-members:
 
@@ -61,6 +68,13 @@
         - create_table
         - drop_table
         - insert_values
+    exclude-members:
+
+::: lazyllm.tools.SqlCall
+    members: 
+        - sql_query_promt_hook
+        - sql_explain_prompt_hook
+        - extract_sql_from_response
     exclude-members:
 
 ::: lazyllm.tools.rag.component.bm25.BM25
@@ -250,19 +264,23 @@
     exclude-members:
 
 ::: lazyllm.tools.rag.doc_node.DocNode
-    members: get_children_str, get_parent_id, get_content, to_dict
+    members: get_children_str, get_parent_id, get_content, to_dict, set_embedding
     exclude-members:
 
 ::: lazyllm.tools.rag.doc_node.QADocNode
     members: get_text
     exclude-members:
 
-::: lazyllm.tools.rag.doc_processor.DocumentProcessor
-    members: register_algorithm, drop_algorithm
+::: lazyllm.tools.rag.parsing_service.server.DocumentProcessor
+    members: [start, register_algorithm, drop_algorithm]
+    exclude-members:
+
+::: lazyllm.tools.rag.parsing_service.worker.DocumentProcessorWorker
+    members: [start, stop]
     exclude-members:
 
 ::: lazyllm.tools.rag.dataReader.SimpleDirectoryReader
-    members: [load_file]
+    members: [load_file, find_extractor_by_file, get_default_reader, add_post_action_for_default_reader]
     exclude-members:
 
 ::: lazyllm.tools.rag.dataReader.FileReader
@@ -298,14 +316,6 @@
     exclude-members: forward
 
 ::: lazyllm.tools.FunctionCall
-    members: 
-    exclude-members: forward
-
-::: lazyllm.tools.FunctionCallFormatter
-    members: 
-    exclude-members: forward
-
-::: lazyllm.tools.FunctionCallAgent
     members: 
     exclude-members: forward
 
@@ -449,4 +459,8 @@
 
 ::: lazyllm.tools.infer_service.serve.InferServer
     members: create_job, cancel_job, list_jobs, get_job_info, get_job_log
+    exclude-members:
+
+::: lazyllm.tools.rag.store.hybrid.sensecore_store.SenseCoreStore
+    members:
     exclude-members:
